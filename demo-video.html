@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDOH Bridge Agent — Demo</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: #0a0a0f;
+  color: #e0e0e0;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+.screen {
+  display: none;
+  padding: 40px;
+  min-height: 100vh;
+  animation: fadeIn 0.5s ease;
+}
+
+.screen.active { display: block; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+h1 {
+  font-size: 2.5em;
+  margin-bottom: 10px;
+  color: #fff;
+}
+
+h2 {
+  font-size: 1.4em;
+  color: #888;
+  margin-bottom: 30px;
+  font-weight: normal;
+}
+
+.tag {
+  display: inline-block;
+  background: #1a1a2e;
+  border: 1px solid #333;
+  border-radius: 4px;
+  padding: 4px 12px;
+  font-size: 0.8em;
+  margin-right: 8px;
+}
+
+.tag.hackathon {
+  border-color: #00d4aa;
+  color: #00d4aa;
+}
+
+.tag.a2a {
+  border-color: #a855f7;
+  color: #a855f7;
+}
+
+.tag.fhir {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.patient-card {
+  background: linear-gradient(135deg, #1a1a2e 0%, #16162a 100%);
+  border: 1px solid #333;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 20px 0;
+  max-width: 500px;
+}
+
+.patient-card h3 {
+  color: #00d4aa;
+  margin-bottom: 8px;
+}
+
+.patient-card .detail {
+  color: #888;
+  margin: 4px 0;
+  font-size: 0.9em;
+}
+
+.problem-tag {
+  display: inline-block;
+  background: #2a1a1a;
+  border: 1px solid #ff4444;
+  color: #ff6666;
+  border-radius: 4px;
+  padding: 6px 12px;
+  margin: 4px;
+  font-size: 0.85em;
+}
+
+.terminal {
+  background: #0d0d12;
+  border: 1px solid #222;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 20px 0;
+  max-width: 900px;
+}
+
+.terminal-header {
+  background: #16161a;
+  padding: 10px 16px;
+  border-bottom: 1px solid #222;
+  display: flex;
+  gap: 8px;
+}
+
+.terminal-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+}
+
+.dot-red { background: #ff5f56; }
+.dot-yellow { background: #ffbd2e; }
+.dot-green { background: #27c93f; }
+
+.terminal-title {
+  color: #666;
+  font-size: 0.8em;
+  margin-left: 8px;
+}
+
+.terminal-body {
+  padding: 20px;
+  font-size: 0.9em;
+  line-height: 1.6;
+}
+
+.cmd {
+  color: #00d4aa;
+}
+
+.output {
+  color: #aaa;
+  margin: 8px 0;
+}
+
+.output.error { color: #ff6666; }
+.output.success { color: #27c93f; }
+.output.highlight { color: #fff; }
+.output.zcode { color: #a855f7; }
+.output.resource { color: #3b82f6; }
+
+.agent-response {
+  background: #0f0f18;
+  border-left: 3px solid #333;
+  padding: 12px 16px;
+  margin: 12px 0;
+  border-radius: 0 4px 4px 0;
+}
+
+.agent-response.sdoh { border-left-color: #00d4aa; }
+.agent-response.resource { border-left-color: #3b82f6; }
+.agent-response.referral { border-left-color: #ffbd2e; }
+.agent-response.outreach { border-left-color: #a855f7; }
+
+.agent-label {
+  font-size: 0.75em;
+  color: #666;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.btn {
+  display: inline-block;
+  background: #00d4aa;
+  color: #0a0a0f;
+  border: none;
+  border-radius: 6px;
+  padding: 12px 32px;
+  font-size: 1em;
+  font-family: inherit;
+  cursor: pointer;
+  margin: 8px;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: #00e6b8;
+  transform: translateY(-2px);
+}
+
+.btn:disabled {
+  background: #333;
+  color: #666;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.progress-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  background: #00d4aa;
+  transition: width 0.3s;
+}
+
+.nav {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+}
+
+.nav button {
+  background: #1a1a2e;
+  border: 1px solid #333;
+  color: #888;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2em;
+}
+
+.nav button:hover {
+  border-color: #00d4aa;
+  color: #00d4aa;
+}
+
+.slide-counter {
+  position: fixed;
+  bottom: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #444;
+  font-size: 0.8em;
+}
+
+.logo {
+  font-size: 0.9em;
+  color: #333;
+  margin-top: 40px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid #222;
+  margin: 30px 0;
+}
+
+.screenshot {
+  background: #111;
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 20px;
+  margin: 20px 0;
+  max-width: 800px;
+}
+
+.screenshot img {
+  width: 100%;
+  border-radius: 4px;
+  border: 1px solid #333;
+}
+</style>
+</head>
+<body>
+
+<!-- SLIDE 1: TITLE -->
+<div class="screen active" id="slide-1">
+  <h1>SDOH Bridge Agent</h1>
+  <h2>Connecting Patients to Community Resources via A2A + FHIR</h2>
+  
+  <div style="margin: 30px 0;">
+    <span class="tag hackathon">Agents Assemble Hackathon</span>
+    <span class="tag a2a">A2A Protocol</span>
+    <span class="tag fhir">FHIR R4</span>
+  </div>
+  
+  <div class="logo">Built with Google ADK + @a2a-js/sdk + ICD-10 Z-codes</div>
+  
+  <div class="nav">
+    <button onclick="nextSlide()">→</button>
+  </div>
+  <div class="slide-counter"><span id="current-slide">1</span> / <span id="total-slides">7</span></div>
+  <div class="progress-bar" id="progress" style="width: 14%"></div>
+</div>
+
+<!-- SLIDE 2: THE PROBLEM -->
+<div class="screen" id="slide-2">
+  <h1>The Problem</h1>
+  <h2>Social Determinants Drive Health Outcomes</h2>
+  
+  <div class="patient-card">
+    <h3>Maria Santos, 47</h3>
+    <div class="detail">Type 2 Diabetes + Hypertension</div>
+    <div class="detail">Medicaid, Limited English Proficiency</div>
+    <div class="detail" style="color: #ff6666; margin-top: 12px;">"</div>
+  </div>
+  
+  <p style="color: #888; max-width: 600px; line-height: 1.8; margin-top: 20px;">
+    Clinical note: "Patient presents with poorly controlled HbA1c. Underlying issue: 
+    food insecurity — cannot afford insulin AND food on the same paycheck."
+  </p>
+  
+  <p style="color: #666; margin-top: 30px; max-width: 600px;">
+    <strong style="color: #fff;">The reality:</strong><br>
+    80% of health outcomes are driven by social factors — not clinical care.<br>
+    Yet most EHR systems can't act on this data.
+  </p>
+  
+  <div class="nav">
+    <button onclick="prevSlide()">←</button>
+    <button onclick="nextSlide()">→</button>
+  </div>
+  <div class="slide-counter"><span id="current-slide">2</span> / <span id="total-slides">7</span></div>
+  <div class="progress-bar" id="progress" style="width: 28%"></div>
+</div>
+
+<!-- SLIDE 3: THE WORKFLOW -->
+<div class="screen" id="slide-3">
+  <h1>The Workflow</h1>
+  <h2>Four A2A Agents Working Together</h2>
+  
+  <div class="terminal">
+    <div class="terminal-header">
+      <div class="terminal-dot dot-red"></div>
+      <div class="terminal-dot dot-yellow"></div>
+      <div class="terminal-dot dot-green"></div>
+      <span class="terminal-title">A2A Agent Orchestration</span>
+    </div>
+    <div class="terminal-body">
+      <div class="output">User: "Screen this patient for SDOH needs"</div>
+      <div style="margin: 16px 0; border-left: 2px solid #333; padding-left: 16px;">
+        <div class="agent-response sdoh">
+          <div class="agent-label">sdoh_bridge_agent (port 3001)</div>
+          <div class="output">Reads FHIR patient record</div>
+          <div class="output">Interprets SDOH screening responses</div>
+          <div class="output zcode">→ Z59.6, Z58.2, Z58.5, Z59.1</div>
+        </div>
+        <div class="agent-response resource">
+          <div class="agent-label">resource_agent (port 3002)</div>
+          <div class="output">Matches Z-codes to community resources</div>
+          <div class="output resource">→ Community Food Bank, Hope Housing</div>
+        </div>
+        <div class="agent-response referral">
+          <div class="agent-label">referral_agent (port 3003)</div>
+          <div class="output">Generates formatted referral packet</div>
+          <div class="output">→ Referral letter + FHIR write-back</div>
+        </div>
+        <div class="agent-response outreach">
+          <div class="agent-label">outreach_agent (port 3004)</div>
+          <div class="output">Schedules 14-day follow-up</div>
+          <div class="output success">→ Task created in Prompt Opinion</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="nav">
+    <button onclick="prevSlide()">←</button>
+    <button onclick="nextSlide()">→</button>
+  </div>
+  <div class="slide-counter"><span id="current-slide">3</span> / <span id="total-slides">7</span></div>
+  <div class="progress-bar" id="progress" style="width: 43%"></div>
+</div>
+
+<!-- SLIDE 4: LIVE DEMO - SCREENING -->
+<div class="screen" id="slide-4">
+  <h1>Live Demo</h1>
+  <h2>SDOH Screening → Z-codes</h2>
+  
+  <div class="terminal">
+    <div class="terminal-header">
+      <div class="terminal-dot dot-red"></div>
+      <div class="terminal-dot dot-yellow"></div>
+      <div class="terminal-dot dot-green"></div>
+      <span class="terminal-title">A2A Request: sdoh_bridge_agent</span>
+    </div>
+    <div class="terminal-body">
+      <div class="output cmd">$ curl -X POST http://localhost:3001/ \</div>
+      <div class="output cmd">  -H "X-API-Key: sdoh-bridge-secret-key-2026" \</div>
+      <div class="output cmd">  -d '{"method":"message/send","params":{"message":{"content":[</div>
+      <div class="output cmd">    {"kind":"text","text":"Food insecurity severe, housing severe"}]}}}'</div>
+      <hr class="divider">
+      <div class="agent-response sdoh">
+        <div class="agent-label">sdoh_bridge_agent</div>
+        <div class="output highlight">Screening results:</div>
+        <div class="output error">• Food insecurity — SEVERE</div>
+        <div class="output error">• Housing instability — SEVERE</div>
+        <div class="output">• Transportation barrier — MODERATE</div>
+        <hr class="divider">
+        <div class="output zcode">Z59.6 — Low income (confidence: 0.96)</div>
+        <div class="output zcode">Z58.2 — Food insecurity (confidence: 0.94)</div>
+        <div class="output zcode">Z59.1 — Housing instability (confidence: 0.91)</div>
+        <div class="output zcode">Z59.7 — Transportation insecurity (confidence: 0.78)</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="nav">
+    <button onclick="prevSlide()">←</button>
+    <button onclick="nextSlide()">→</button>
+  </div>
+  <div class="slide-counter"><span id="current-slide">4</span> / <span id="total-slides">7</span></div>
+  <div class="progress-bar" id="progress" style="width: 57%"></div>
+</div>
+
+<!-- SLIDE 5: LIVE DEMO - RESOURCES -->
+<div class="screen" id="slide-5">
+  <h1>Live Demo</h1>
+  <h2>Z-codes → Community Resources</h2>
+  
+  <div class="terminal">
+    <div class="terminal-header">
+      <div class="terminal-dot dot-red"></div>
+      <div class="terminal-dot dot-yellow"></div>
+      <div class="terminal-dot dot-green"></div>
+      <span class="terminal-title">resource_matcher tool output</span>
+    </div>
+    <div class="terminal-body">
+      <div class="agent-response resource">
+        <div class="agent-label">resource_agent matched 8 resources</div>
+        <div class="output resource">┌─────────────────────────────────────────────────────────┐</div>
+        <div class="output resource">│ 1. Community Food Bank     ★★★★★  0.3 mi │ Z58.2, Z59.6 │</div>
+        <div class="output resource">│    (555) 123-4567 • English, Spanish, Vietnamese       │</div>
+        <div class="output resource">│    Emergency Food Box, SNAP Enrollment                │</div>
+        <div class="output resource">├─────────────────────────────────────────────────────────┤</div>
+        <div class="output resource">│ 2. Hope Housing Assistance  ★★★★☆  1.2 mi │ Z59.1, Z59.6 │</div>
+        <div class="output resource">│    (555) 234-5678 • English, Spanish                  │</div>
+        <div class="output resource">│    Rental Assistance, Emergency Shelter               │</div>
+        <div class="output resource">├─────────────────────────────────────────────────────────┤</div>
+        <div class="output resource">│ 3. Transport Assist Program  ★★★☆☆  1.8 mi │ Z59.7      │</div>
+        <div class="output resource">│    (555) 567-8901 • English, Spanish                  │</div>
+        <div class="output resource">│    Medical Rides, Bus Passes, Rideshare Vouchers       │</div>
+        <div class="output resource">└─────────────────────────────────────────────────────────┘</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="nav">
+    <button onclick="prevSlide()">←</button>
+    <button onclick="nextSlide()">→</button>
+  </div>
+  <div class="slide-counter"><span id="current-slide">5</span> / <span id="total-slides">7</span></div>
+  <div class="progress-bar" id="progress" style="width: 71%"></div>
+</div>
+
+<!-- SLIDE 6: LIVE DEMO - REFERRAL -->
+<div class="screen" id="slide-6">
+  <h1>Live Demo</h1>
+  <h2>Referral Packet + FHIR Write-back</h2>
+  
+  <div class="terminal">
+    <div class="terminal-header">
+      <div class="terminal-dot dot-red"></div>
+      <div class="terminal-dot dot-yellow"></div>
+      <div class="terminal-dot dot-green"></div>
+      <span class="terminal-title">referral_formatter output</span>
+    </div>
+    <div class="terminal-body">
+      <div class="agent-response referral">
+        <div class="agent-label">referral_agent generated referral packet</div>
+        <div class="output highlight" style="font-size: 0.8em;">┌─────────────────────────────────────────────────────────┐</div>
+        <div class="output highlight" style="font-size: 0.8em;">│ COMMUNITY RESOURCE REFERRAL — Maria Santos            │</div>
+        <div class="output" style="font-size: 0.8em;">│─────────────────────────────────────────────────────────│</div>
+        <div class="output" style="font-size: 0.8em;">│ REFERRED TO:                                          │</div>
+        <div class="output" style="font-size: 0.8em;">│ • Community Food Bank — (555) 123-4567                │</div>
+        <div class="output" style="font-size: 0.8em;">│ • Hope Housing Assistance — (555) 234-5678            │</div>
+        <div class="output" style="font-size: 0.8em;">│─────────────────────────────────────────────────────────│</div>
+        <div class="output success">✓ CarePlan written to FHIR: sdoh-careplan-REF-...</div>
+        <div class="output success">✓ SDOHObservation written to FHIR: sdoh-outcome-...</div>
+        <div class="output success">✓ Follow-up scheduled: 14 days</div>
+        <div class="output highlight" style="font-size: 0.8em;">└─────────────────────────────────────────────────────────┘</div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="nav">
+    <button onclick="prevSlide()">←</button>
+    <button onclick="nextSlide()">→</button>
+  </div>
+  <div class="slide-counter"><span id="current-slide">6</span> / <span id="total-slides">7</span></div>
+  <div class="progress-bar" id="progress" style="width: 85%"></div>
+</div>
+
+<!-- SLIDE 7: WHY THIS WINS -->
+<div class="screen" id="slide-7">
+  <h1>Why This Wins</h1>
+  <h2>Judging Criteria Alignment</h2>
+  
+  <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; max-width: 900px; margin: 30px 0;">
+    <div style="background: #1a1a2e; border-radius: 8px; padding: 20px; border: 1px solid #333;">
+      <div style="color: #00d4aa; font-size: 0.8em; margin-bottom: 8px;">AI FACTOR (33%)</div>
+      <div style="color: #fff; font-size: 1.1em;">A2A Multi-Agent</div>
+      <div style="color: #888; font-size: 0.85em; margin-top: 8px;">4 specialized agents communicating via A2A protocol. FHIR context injected automatically.</div>
+    </div>
+    <div style="background: #1a1a2e; border-radius: 8px; padding: 20px; border: 1px solid #333;">
+      <div style="color: #a855f7; font-size: 0.8em; margin-bottom: 8px;">IMPACT (33%)</div>
+      <div style="color: #fff; font-size: 1.1em;">Real SDOH Crisis</div>
+      <div style="color: #888; font-size: 0.85em; margin-top: 8px;">Food insecurity, housing instability — the root causes clinicians can't prescribe for.</div>
+    </div>
+    <div style="background: #1a1a2e; border-radius: 8px; padding: 20px; border: 1px solid #333;">
+      <div style="color: #3b82f6; font-size: 0.8em; margin-bottom: 8px;">FEASIBILITY (33%)</div>
+      <div style="color: #fff; font-size: 1.1em;">Built & Working</div>
+      <div style="color: #888; font-size: 0.85em; margin-top: 8px;">Live agents on Prompt Opinion. FHIR R4 integration. ICD-10 Z-codes.</div>
+    </div>
+  </div>
+  
+  <div style="border-top: 1px solid #222; padding-top: 30px; max-width: 700px;">
+    <p style="color: #fff; font-size: 1.1em; margin-bottom: 12px;">The judges at CHOP deal with SDOH daily.</p>
+    <p style="color: #666; line-height: 1.8;">This isn't a demo of AI searching the web.<br>
+    This is AI doing what clinicians can't — closing the loop on social care.</p>
+  </div>
+  
+  <div style="margin-top: 40px;">
+    <span class="tag hackathon">github.com/nokai-dev/sdoh-bridge-agent</span>
+    <span class="tag a2a">Prompt Opinion Ready</span>
+  </div>
+  
+  <div class="nav">
+    <button onclick="prevSlide()">←</button>
+  </div>
+  <div class="slide-counter"><span id="current-slide">7</span> / <span id="total-slides">7</span></div>
+  <div class="progress-bar" id="progress" style="width: 100%"></div>
+</div>
+
+<script>
+let currentSlide = 1;
+const totalSlides = 7;
+
+function showSlide(n) {
+  if (n < 1 || n > totalSlides) return;
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(`slide-${n}`).classList.add('active');
+  currentSlide = n;
+  document.getElementById('current-slide').textContent = n;
+}
+
+function nextSlide() { showSlide(currentSlide + 1); }
+function prevSlide() { showSlide(currentSlide - 1); }
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+  if (e.key === 'ArrowLeft') prevSlide();
+});
+</script>
+
+</body>
+</html>
