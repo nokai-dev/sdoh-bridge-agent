@@ -123,7 +123,7 @@ class AdkAgentExecutor implements AgentExecutor {
         const { userMessage, contextId } = requestContext;
 
         // Extract plain text from all text parts in the A2A message.
-        const userText = userMessage.parts
+        const userText = (userMessage.content ?? [])
             .filter((p): p is { kind: 'text'; text: string } => p.kind === 'text')
             .map((p) => p.text)
             .join('\n');

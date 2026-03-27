@@ -34,7 +34,7 @@ const NO_CREDS_RESPONSE = {
         'in the A2A message metadata (fhirUrl, fhirToken, patientId).',
 };
 
-function getFhirCredentials(toolContext: ToolContext): FhirCredentials | null {
+export function getFhirCredentials(toolContext: ToolContext): FhirCredentials | null {
     // Accept both camelCase (TypeScript) and snake_case (Python) key names.
     const fhirUrl = (toolContext.state.get('fhirUrl') ?? toolContext.state.get('fhir_url')) as string | undefined;
     const fhirToken = (toolContext.state.get('fhirToken') ?? toolContext.state.get('fhir_token')) as string | undefined;
