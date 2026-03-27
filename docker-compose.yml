@@ -1,36 +1,59 @@
+version: '3.8'
+
 services:
-  healthcare:
-    build: .
-    ports:
-      - "8001:8001"
-    environment:
-      - AGENT_MODULE=healthcare_agent
-      - PORT=8001
-      - GOOGLE_GENAI_USE_VERTEXAI=FALSE
-    env_file:
-      - .env
+  sdoh-bridge-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ghcr.io/nokai-dev/sdoh-bridge-agent:latest
+    container_name: sdoh-bridge-agent
     restart: unless-stopped
+    ports:
+      - "3000:3000"   # Reverse proxy + all agent routes
+      - "3001:3001"   # sdoh_bridge_agent (optional, direct access)
+      - "3002:3002"   # resource_agent (optional)
+      - "3003:3003"   # referral_agent (optional)
+      - "3004:3004"   # outreach_agent (optional)
+    environment:
+      # REQUIRED: Your Google AI Studio API key
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
+      # REQUIRED: Public URL of this service (for Agent Cards)
+      # Must be set to your public URL when deploying
+      - PUBLIC_URL=${PUBLIC_URL:-http://localhost:3000}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
 
-  general:
-    build: .
-    ports:
-      - "8002:8002"
-    environment:
-      - AGENT_MODULE=general_agent
-      - PORT=8002
-      - GOOGLE_GENAI_USE_VERTEXAI=FALSE
-    env_file:
-      - .env
-    restart: unless-stopped
-
-  orchestrator:
-    build: .
-    ports:
-      - "8003:8003"
-    environment:
-      - AGENT_MODULE=orchestrator
-      - PORT=8003
-      - GOOGLE_GENAI_USE_VERTEXAI=FALSE
-    env_file:
-      - .env
-    restart: unless-stopped
+# Example deployment commands:
+#
+# LOCAL:
+#   cp .env.example .env
+#   # Edit .env with your GOOGLE_API_KEY and PUBLIC_URL
+#   docker-compose up -d
+#
+# RAILWAY (recommended):
+#   railway login
+#   railway init
+#   railway up
+#   railway env set GOOGLE_API_KEY=your-key
+#   railway env set PUBLIC_URL=https://your-app.railway.app
+#
+# GOOGLE CLOUD RUN:
+#   gcloud run deploy sdoh-bridge-agent \
+#     --source . \
+#     --region us-central1 \
+#     --platform managed \
+#     --allow-unauthenticated \
+#     --port 3000 \
+#     --set-env-vars "GOOGLE_API_KEY=...,PUBLIC_URL=https://your-url.run.app"
+#
+# Prompt Opinion Registration URLs (when deployed):
+#   sdoh_bridge:  ${PUBLIC_URL}/sdoh_bridge/
+#   resource:     ${PUBLIC_URL}/resource/
+#   referral:     ${PUBLIC_URL}/referral/
+#   outreach:     ${PUBLIC_URL}/outreach/
+#
+# API Key for all agents: sdoh-bridge-secret-key-2026

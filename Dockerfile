@@ -1,31 +1,27 @@
-# ── Prompt Opinion ADK Agent (TypeScript) — Cloud Run container ──────────────
+# ── SDOH Bridge Agent — Full Stack ───────────────────────────────────────────
 #
-# This single Dockerfile builds all three agents from the same image.
-# The AGENT_MODULE env var selects which agent to start at runtime.
+# Multi-arch Docker image for SDOH Bridge Agent system.
+# Builds all 4 agents + reverse proxy.
 #
-# Local build + test:
-#   docker build -t po-adk-ts .
-#   docker run --rm -p 8080:8080 \
-#     -e AGENT_MODULE=general_agent \
-#     -e GOOGLE_API_KEY=your-key-here \
-#     -e GOOGLE_GENAI_USE_VERTEXAI=FALSE \
-#     po-adk-ts
+# Build:
+#   docker build -t sdoh-bridge-agent .
 #
-# Cloud Run deployment:
-#   gcloud run deploy general-agent \
-#     --source . \
-#     --set-env-vars "AGENT_MODULE=general_agent,GOOGLE_GENAI_USE_VERTEXAI=FALSE" \
-#     --set-secrets "GOOGLE_API_KEY=google-api-key:latest" ...
+# Run:
+#   docker run --rm -p 3000:3000 \
+#     -e GOOGLE_API_KEY=your-key \
+#     -e PUBLIC_URL=https://your-public-url.com \
+#     ghcr.io/nokai-dev/sdoh-bridge-agent:latest
+#
+# Or with docker-compose (see docker-compose.yml):
+#   docker-compose up
 
 FROM node:20-slim AS builder
 
 WORKDIR /app
 
-# Install dependencies first — cached layer unless package.json changes
 COPY package*.json ./
 RUN npm ci
 
-# Copy source and build
 COPY . .
 RUN npm run build
 
@@ -34,19 +30,40 @@ FROM node:20-slim
 
 WORKDIR /app
 
-# Only copy production deps and compiled output
+# Install tini for proper signal handling
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tini \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY package*.json ./
 RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/reverse-proxy.ts ./reverse-proxy.ts
 
-# Cloud Run sets PORT=8080; default to 8080 for local Docker testing.
-ENV PORT=8080
+# Default port
+ENV PORT=3000
 
-# Which agent to serve:
-#   general_agent      → dist/general_agent/server.js     (public, no key)
-#   healthcare_agent   → dist/healthcare_agent/server.js  (X-API-Key required)
-#   orchestrator       → dist/orchestrator/server.js      (X-API-Key required)
-ENV AGENT_MODULE=general_agent
+# Public URL of this service (used in Agent Cards)
+# MUST be set when deploying — e.g. https://sdoh-bridge-agent.xxx.up.railway.app
+ENV PUBLIC_URL=http://localhost:3000
 
-CMD ["sh", "-c", "node dist/${AGENT_MODULE}/server.js"]
+# Google AI Studio API key — pass via -e or secrets at runtime
+# DO NOT bake into image
+ENV GOOGLE_API_KEY=
+
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# Start reverse proxy + all 4 agents
+CMD ["sh", "-c", "\
+    PORT=3001 SDOH_BRIDGE_AGENT_URL=${PUBLIC_URL}/sdoh_bridge \
+               FHIR_EXTENSION_URI=http://localhost:5139/schemas/a2a/v1/fhir-context \
+               node dist/sdoh_bridge_agent/server.js & \
+    PORT=3002 RESOURCE_AGENT_URL=${PUBLIC_URL}/resource \
+               node dist/resource_agent/server.js & \
+    PORT=3003 REFERRAL_AGENT_URL=${PUBLIC_URL}/referral \
+               node dist/referral_agent/server.js & \
+    PORT=3004 OUTREACH_AGENT_URL=${PUBLIC_URL}/outreach \
+               node dist/outreach_agent/server.js & \
+    node_modules/.bin/npx tsx reverse-proxy.ts & \
+    wait"]
