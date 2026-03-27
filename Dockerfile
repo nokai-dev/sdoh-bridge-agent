@@ -40,8 +40,7 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/reverse-proxy.ts ./reverse-proxy.ts
-# Also copy reverse-proxy as compiled JS
-COPY reverse-proxy.js ./reverse-proxy.js 2>/dev/null || true
+COPY reverse-proxy.js ./reverse-proxy.js
 
 # Default port
 ENV PORT=3000
