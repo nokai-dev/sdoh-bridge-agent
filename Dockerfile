@@ -40,7 +40,7 @@ RUN npm ci --omit=dev
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/reverse-proxy.ts ./reverse-proxy.ts
-COPY reverse-proxy.js ./reverse-proxy.js
+COPY reverse-proxy.cjs ./reverse-proxy.cjs
 
 # Default port
 ENV PORT=3000
@@ -71,5 +71,5 @@ CMD ["sh", "-c", "\
                node dist/referral_agent/server.js & \
     PORT=3004 OUTREACH_AGENT_URL=${PUBLIC_URL}/outreach \
                node dist/outreach_agent/server.js & \
-    node reverse-proxy.js & \
+    node reverse-proxy.cjs & \
     wait"]
