@@ -1,0 +1,259 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-james-washington",
+        "name": [
+          {
+            "family": "Washington",
+            "given": [
+              "James",
+              "Harold"
+            ],
+            "use": "official"
+          }
+        ],
+        "birthDate": "1945-08-22",
+        "gender": "male",
+        "address": [
+          {
+            "line": [
+              "1290 Oak Lane Apt 4B"
+            ],
+            "city": "Springfield",
+            "state": "IL",
+            "postalCode": "62702",
+            "country": "USA"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "(555) 891-2345",
+            "use": "home"
+          }
+        ],
+        "maritalStatus": {
+          "text": "Widowed"
+        },
+        "communication": [
+          {
+            "language": {
+              "text": "English",
+              "coding": [
+                {
+                  "code": "en",
+                  "display": "English"
+                }
+              ]
+            },
+            "preferredLanguage": "English"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-james-chf",
+        "clinicalStatus": {
+          "text": "Active"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "42343007",
+              "display": "Congestive Heart Failure"
+            }
+          ]
+        },
+        "recordedDate": "2022-03-15",
+        "subject": {
+          "reference": "Patient/patient-james-washington"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-james-copd",
+        "clinicalStatus": {
+          "text": "Active"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "13645005",
+              "display": "COPD"
+            }
+          ]
+        },
+        "recordedDate": "2021-09-01",
+        "subject": {
+          "reference": "Patient/patient-james-washington"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-james-furosemide",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "197361",
+              "display": "Furosemide 40mg"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/patient-james-washington"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-james-living-alone",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "code": "sdoh",
+                "display": "Social Determinants of Health"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "88281-5",
+              "display": "Lives alone [HHS]"
+            }
+          ]
+        },
+        "valueString": "Lives alone — wife passed 2 years ago, adult children live out of state",
+        "effectiveDateTime": "2024-10-01",
+        "subject": {
+          "reference": "Patient/patient-james-washington"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-james-fall-risk",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "code": "sdoh",
+                "display": "Social Determinants of Health"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "64345-0",
+              "display": "Fall risk [HHS]"
+            }
+          ]
+        },
+        "valueString": "High fall risk — history of falls, no grab bars in home, stairs to enter",
+        "effectiveDateTime": "2024-10-01",
+        "subject": {
+          "reference": "Patient/patient-james-washington"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-james-meal-access",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "code": "sdoh",
+                "display": "Social Determinants of Health"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "88191-7",
+              "display": "Food insecurity [HHS]"
+            }
+          ]
+        },
+        "valueString": "Limited meal access — difficulty preparing meals due to fatigue, relies on frozen meals",
+        "effectiveDateTime": "2024-10-01",
+        "subject": {
+          "reference": "Patient/patient-james-washington"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-james-no-caregiver",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "code": "sdoh",
+                "display": "Social Determinants of Health"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "88485-2",
+              "display": "Caregiver availability [HHS]"
+            }
+          ]
+        },
+        "valueString": "No regular caregiver — needs home health aide, adult day care, or meal delivery",
+        "effectiveDateTime": "2024-10-01",
+        "subject": {
+          "reference": "Patient/patient-james-washington"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "CarePlan",
+        "id": "careplan-james-sdoh",
+        "status": "active",
+        "intent": "plan",
+        "title": "SDOH Care Plan — James Washington",
+        "description": "Address isolation, meal access, fall risk, caregiver support",
+        "subject": {
+          "reference": "Patient/patient-james-washington"
+        }
+      }
+    }
+  ]
+}

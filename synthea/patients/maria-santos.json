@@ -1,0 +1,318 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-maria-santos",
+        "name": [
+          {
+            "family": "Santos",
+            "given": [
+              "Maria",
+              "Elena"
+            ],
+            "use": "official"
+          }
+        ],
+        "birthDate": "1978-03-15",
+        "gender": "female",
+        "address": [
+          {
+            "line": [
+              "842 Prospect Ave"
+            ],
+            "city": "Springfield",
+            "state": "IL",
+            "postalCode": "62701",
+            "country": "USA"
+          }
+        ],
+        "telecom": [
+          {
+            "system": "phone",
+            "value": "(555) 234-5678",
+            "use": "mobile"
+          },
+          {
+            "system": "email",
+            "value": "maria.santos@email.com"
+          }
+        ],
+        "maritalStatus": {
+          "text": "Single"
+        },
+        "communication": [
+          {
+            "language": {
+              "text": "Spanish",
+              "coding": [
+                {
+                  "code": "es",
+                  "display": "Spanish"
+                }
+              ]
+            },
+            "preferredLanguage": "Spanish"
+          }
+        ]
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-maria-hypertension",
+        "clinicalStatus": {
+          "text": "Active"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertension"
+            }
+          ]
+        },
+        "recordedDate": "2023-06-12",
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-maria-diabetes-2",
+        "clinicalStatus": {
+          "text": "Active"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 Diabetes Mellitus"
+            }
+          ]
+        },
+        "recordedDate": "2023-06-12",
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-maria-metformin",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "860975",
+              "display": "Metformin 500mg"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "MedicationRequest",
+        "id": "med-maria-lisinopril",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "314076",
+              "display": "Lisinopril 10mg"
+            }
+          ]
+        },
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-maria-food-insecurity",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "code": "sdoh",
+                "display": "Social Determinants of Health"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "88191-7",
+              "display": "Food insecurity [HHS]"
+            }
+          ]
+        },
+        "valueString": "Food insecurity present — limited access to nutritious food due to cost",
+        "effectiveDateTime": "2024-11-03",
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-maria-transport-barrier",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "code": "sdoh",
+                "display": "Social Determinants of Health"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "93039-8",
+              "display": "Transportation barrier [HHS]"
+            }
+          ]
+        },
+        "valueString": "Transportation barrier — no personal vehicle, limited public transit access",
+        "effectiveDateTime": "2024-11-03",
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-maria-housing",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "code": "sdoh",
+                "display": "Social Determinants of Health"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "89205003",
+              "display": "Housing instability [HHS]"
+            }
+          ]
+        },
+        "valueString": "Housing unstable — moved 3 times in past year due to rent increases",
+        "effectiveDateTime": "2024-11-03",
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-maria-social-history",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "code": "social-history",
+                "display": "Social History"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "46499-0",
+              "display": "Tobacco use"
+            }
+          ]
+        },
+        "valueString": "Never smoker",
+        "effectiveDateTime": "2024-01-15",
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-maria-employment",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "code": "sdoh",
+                "display": "Social Determinants of Health"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "74164-5",
+              "display": "Employment status [HHS]"
+            }
+          ]
+        },
+        "valueString": "Part-time retail worker — hours reduced, income insufficient for food + medications",
+        "effectiveDateTime": "2024-11-03",
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        }
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "CarePlan",
+        "id": "careplan-maria-sdoh",
+        "status": "active",
+        "intent": "plan",
+        "title": "SDOH Care Plan — Maria Santos",
+        "description": "Address food insecurity, transportation, and housing instability",
+        "subject": {
+          "reference": "Patient/patient-maria-santos"
+        },
+        "note": [
+          {
+            "text": "Patient referred to Community Food Bank, Hope Housing, Transportation Assistance"
+          }
+        ]
+      }
+    }
+  ]
+}

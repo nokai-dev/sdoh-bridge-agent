@@ -6,15 +6,15 @@ import 'dotenv/config';
 import { createA2aApp } from '../shared/appFactory.js';
 import { outreachAgent } from './agent.js';
 
-const PORT = Number(process.env['PORT'] ?? 3003);
+const PORT = Number(process.env['PORT'] ?? 3004);
 const URL = process.env['OUTREACH_AGENT_URL'] ?? `http://localhost:${PORT}`;
 
 const app = createA2aApp({
     agent: outreachAgent,
     name: 'outreach_agent',
     description: (
-        'Manages follow-up and outcome tracking for SDOH referrals. ' +
-        'Records whether patients connected with community resources and writes outcomes to FHIR.'
+        'Verifies patients connected with community resources. Handles follow-up, ' +
+        'identifies barriers, and escalates unresolvable issues.'
     ),
     url: URL,
     version: '1.0.0',

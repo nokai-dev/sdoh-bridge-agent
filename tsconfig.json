@@ -17,7 +17,12 @@
         "shared/**/*.ts",
         "general_agent/**/*.ts",
         "healthcare_agent/**/*.ts",
-        "orchestrator/**/*.ts"
+        "sdoh_bridge_agent/**/*.ts",
+        "resource_agent/**/*.ts",
+        "referral_agent/**/*.ts",
+        "outreach_agent/**/*.ts",
+        "orchestrator/**/*.ts",
+        "synthea/**/*.ts"
     ],
     "exclude": [
         "node_modules",
