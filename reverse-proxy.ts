@@ -1,14 +1,12 @@
 /**
- * Simple A2A Reverse Proxy — serves agent cards directly + routes A2A messages.
+ * A2A Reverse Proxy — compiled to JS for production deployment.
  *
- * Maps agent names to local ports.
- * Prompt Opinion calls: POST /<agent-name>/
- * Proxy forwards to: localhost:<agent-port>/
+ * Serves agent cards directly + routes A2A messages.
  */
 
 import express from 'express';
 
-const AGENT_ROUTES: Record<string, number> = {
+const AGENT_ROUTES = {
     sdoh_bridge: 3001,
     resource: 3002,
     referral: 3003,
@@ -50,13 +48,9 @@ app.all('/:agent/', async (req, res) => {
 
     const url = `http://localhost:${targetPort}/`;
     try {
-        const headers: Record<string, string> = {
-            'Content-Type': 'application/json',
-        };
-
-        // Forward API key
+        const headers = { 'Content-Type': 'application/json' };
         const apiKey = req.headers['x-api-key'];
-        if (apiKey) headers['X-API-Key'] = apiKey as string;
+        if (apiKey) headers['X-API-Key'] = apiKey;
 
         const response = await fetch(url, {
             method: req.method,
@@ -72,17 +66,7 @@ app.all('/:agent/', async (req, res) => {
     }
 });
 
-// Health check
-app.get('/health', (req, res) => {
-    res.json({ status: 'ok', agents: Object.keys(AGENT_ROUTES) });
-});
-
 const PORT = Number(process.env['PORT'] ?? 3000);
 app.listen(PORT, () => {
     console.log(`A2A Reverse Proxy running on port ${PORT}`);
-    console.log('Routes:');
-    for (const [name, port] of Object.entries(AGENT_ROUTES)) {
-        console.log(`  GET  /${name}/.well-known/agent-card.json → localhost:${port}/.well-known/agent-card.json`);
-        console.log(`  POST /${name}/                           → localhost:${port}/`);
-    }
 });

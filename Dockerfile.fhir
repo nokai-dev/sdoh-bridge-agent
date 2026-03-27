@@ -21,8 +21,8 @@ COPY package*.json ./
 RUN npm ci
 
 COPY synthea/ ./synthea/
-COPY mock-fhir-server.ts ./
+COPY mock-fhir-server.js ./
 
 EXPOSE 8080
 
-CMD ["npx", "tsx", "mock-fhir-server.ts"]
+CMD ["node", "mock-fhir-server.js"]
