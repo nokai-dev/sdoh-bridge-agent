@@ -52,6 +52,11 @@ ENV PUBLIC_URL=http://localhost:3000
 # DO NOT bake into image
 ENV GOOGLE_API_KEY=
 
+# FHIR Server URL (for demo mode without Prompt Opinion)
+ENV FHIR_SERVER_URL=http://localhost:8080/fhir
+ENV FHIR_TOKEN=demo-token
+ENV DEMO_PATIENT_ID=patient-maria-santos
+
 ENTRYPOINT ["/usr/bin/tini", "--"]
 
 # Start reverse proxy + all 4 agents

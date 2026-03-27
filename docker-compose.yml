@@ -1,59 +1,73 @@
 version: '3.8'
 
 services:
+  # ── Mock FHIR Server (Synthea test data) ──────────────────────────────────
+  fhir-server:
+    build:
+      context: .
+      dockerfile: Dockerfile.fhir
+    container_name: sdoh-fhir-server
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ── SDOH Bridge Agent System (4 agents + reverse proxy) ───────────────────
   sdoh-bridge-agent:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ghcr.io/nokai-dev/sdoh-bridge-agent:latest
     container_name: sdoh-bridge-agent
     restart: unless-stopped
     ports:
-      - "3000:3000"   # Reverse proxy + all agent routes
-      - "3001:3001"   # sdoh_bridge_agent (optional, direct access)
-      - "3002:3002"   # resource_agent (optional)
-      - "3003:3003"   # referral_agent (optional)
-      - "3004:3004"   # outreach_agent (optional)
+      - "3000:3000"   # Reverse proxy (A2A routing)
     environment:
-      # REQUIRED: Your Google AI Studio API key
-      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
-      # REQUIRED: Public URL of this service (for Agent Cards)
-      # Must be set to your public URL when deploying
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-your-google-api-key}
       - PUBLIC_URL=${PUBLIC_URL:-http://localhost:3000}
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 20s
+      # FHIR Server (when not using Prompt Opinion FHIR Extension)
+      - FHIR_SERVER_URL=${FHIR_SERVER_URL:-http://fhir-server:8080/fhir}
+      - FHIR_TOKEN=demo-token
+      # Demo patient ID (change to: patient-james-washington, patient-amara-okafor)
+      - DEMO_PATIENT_ID=${DEMO_PATIENT_ID:-patient-maria-santos}
+    depends_on:
+      fhir-server:
+        condition: service_healthy
 
-# Example deployment commands:
+# ── Deployment Guide ─────────────────────────────────────────────────────────
 #
-# LOCAL:
+# QUICK START (local):
 #   cp .env.example .env
-#   # Edit .env with your GOOGLE_API_KEY and PUBLIC_URL
+#   # Edit .env with your GOOGLE_API_KEY
 #   docker-compose up -d
 #
-# RAILWAY (recommended):
-#   railway login
-#   railway init
-#   railway up
-#   railway env set GOOGLE_API_KEY=your-key
-#   railway env set PUBLIC_URL=https://your-app.railway.app
+# TEST:
+#   curl http://localhost:8080/fhir/Patient/patient-maria-santos
+#   curl http://localhost:3000/sdoh_bridge/.well-known/agent-card.json
 #
-# GOOGLE CLOUD RUN:
-#   gcloud run deploy sdoh-bridge-agent \
-#     --source . \
-#     --region us-central1 \
-#     --platform managed \
-#     --allow-unauthenticated \
-#     --port 3000 \
-#     --set-env-vars "GOOGLE_API_KEY=...,PUBLIC_URL=https://your-url.run.app"
-#
-# Prompt Opinion Registration URLs (when deployed):
+# PROMPT OPINION REGISTRATION:
 #   sdoh_bridge:  ${PUBLIC_URL}/sdoh_bridge/
 #   resource:     ${PUBLIC_URL}/resource/
 #   referral:     ${PUBLIC_URL}/referral/
 #   outreach:     ${PUBLIC_URL}/outreach/
+#   API Key:      sdoh-bridge-secret-key-2026
 #
-# API Key for all agents: sdoh-bridge-secret-key-2026
+# HOSTINGER DEPLOY:
+#   git clone https://github.com/nokai-dev/sdoh-bridge-agent.git
+#   cd sdoh-bridge-agent
+#   docker login ghcr.io -u <github-user> --password-stdin < token.txt
+#   cp .env.example .env && nano .env
+#   docker-compose up -d
+#   curl http://localhost:3000/health
+#
+# RAILWAY:
+#   railway login && railway init
+#   railway up --dockerfile Dockerfile
+#   railway env set GOOGLE_API_KEY=... PUBLIC_URL=https://your-app.railway.app
+#
+# CLOUD RUN:
+#   gcloud run deploy sdoh-bridge-agent --source . --port 3000 \
+#     --set-env-vars "GOOGLE_API_KEY=...,PUBLIC_URL=https://...run.app,FHIR_SERVER_URL=http://localhost:8080/fhir"

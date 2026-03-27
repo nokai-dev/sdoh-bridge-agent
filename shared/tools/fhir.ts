@@ -40,8 +40,17 @@ export function getFhirCredentials(toolContext: ToolContext): FhirCredentials | 
     const fhirToken = (toolContext.state.get('fhirToken') ?? toolContext.state.get('fhir_token')) as string | undefined;
     const patientId = (toolContext.state.get('patientId') ?? toolContext.state.get('patient_id')) as string | undefined;
 
-    if (!fhirUrl || !fhirToken || !patientId) return null;
-    return { fhirUrl: fhirUrl.replace(/\/$/, ''), fhirToken, patientId };
+    // Fallback: use environment variables (for demo mode without Prompt Opinion)
+    const fallbackUrl = process.env['FHIR_SERVER_URL'];
+    const fallbackToken = process.env['FHIR_TOKEN'] ?? 'demo-token';
+    const fallbackPatientId = process.env['DEMO_PATIENT_ID'] ?? 'patient-maria-santos';
+
+    if (!fhirUrl && !fallbackUrl) return null;
+    return {
+        fhirUrl: (fhirUrl ?? fallbackUrl!).replace(/\/$/, ''),
+        fhirToken: fhirToken ?? fallbackToken,
+        patientId: patientId ?? fallbackPatientId,
+    };
 }
 
 async function fhirGet(
